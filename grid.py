@@ -78,3 +78,7 @@ class Grid:
         cells = list(self.cells.values())
         for cell in cells:
             cell.make_action(self)
+
+    def remove_cell_at(self, position):
+        if position in self.cells:
+            self.remove_cell(self.cells[position])
