@@ -3,6 +3,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 
+
 class Grid:
     """Class representing a grid of cells."""
     def __init__(self, rows: int, cols: int):
@@ -82,3 +83,49 @@ class Grid:
     def remove_cell_at(self, position):
         if position in self.cells:
             self.remove_cell(self.cells[position])
+
+    def neighbors(self, cell) -> list[tuple[int, int]]:
+        """Return a list of neighboring positions for a given cell."""
+        x, y = cell.position
+        neighbors = []
+        for dx in [-1, 0, 1]:
+            for dy in [-1, 0, 1]:
+                if dx == 0 and dy == 0:
+                    continue
+                new_x, new_y = x + dx, y + dy
+                if 0 <= new_x < self.rows and 0 <= new_y < self.cols:
+                    if (new_x, new_y) in self.cells:
+                        neighbors.append(self.cells[(new_x, new_y)])
+        return neighbors
+
+    def count_cells(self, cell_types : tuple):
+        """Count the number of cells of a specific type in the grid."""
+        count = 0
+        for cell in self.cells.values():
+                if isinstance(cell_types, tuple):
+                    for cell_type in cell_types:
+                        if isinstance(cell, cell_type):
+                            count += 1
+                else:
+                    if isinstance(cell, cell_types):
+                        count += 1
+        return count
+
+    def empty_cells(self):
+        """Return a list of empty positions in the grid."""
+        empty = []
+        for y in range(self.rows):
+            for x in range(self.cols):
+                if not self.grid[y][x]:
+                    empty.append((y, x))
+        return empty
+
+    def nearest_tumor_distance(self, position):
+        """Return the distance from the given position to the nearest tumor cell."""
+        min_dist = float('inf')
+        for cell in self.cells.values():
+            if cell.is_tumor_cell:
+                dist = np.sqrt((position[0] - cell.position[0]) ** 2 + (position[1] - cell.position[1]) ** 2)
+                if dist < min_dist:
+                    min_dist = dist
+        return min_dist
