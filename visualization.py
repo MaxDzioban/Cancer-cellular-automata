@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor, QBrush, QPen, QFont
 
-from cells import Cell
+from cells import Cell, RegularTumorCell, StemTumorCell, ImmuneCell
 from grid import Grid
 import sys
 import numpy as np
@@ -170,7 +170,7 @@ class TumorGrowthWindow(QMainWindow):
         self.view.mousePressEvent = self.handle_click
         
         right_panel.addWidget(self.view)
-        
+
         # Add panels to main layout
         left_panel_widget = QWidget()
         left_panel_widget.setLayout(left_panel)
@@ -238,7 +238,11 @@ class TumorGrowthWindow(QMainWindow):
         for i in range(self.grid_size):
             for j in range(self.grid_size):
                 rect = QGraphicsRectItem(j * self.cell_size, i * self.cell_size, self.cell_size, self.cell_size)
-                color = QColor("red") if self.grid.grid[i, j] == 1 else QColor("white")
+                cell = self.grid.cells.get((i, j))
+                if cell:
+                    color = self.get_cell_color(cell)
+                else:
+                    color = QColor("#FFFFFF")
                 rect.setBrush(QBrush(color))
                 rect.setPen(QPen(QColor("#333333"), 0.5))
                 self.scene.addItem(rect)
@@ -248,6 +252,22 @@ class TumorGrowthWindow(QMainWindow):
         """Update the simulation speed"""
         self.update_interval = self.speed_slider.value()
         self.timer.setInterval(self.update_interval)
+
+    def get_cell_color(self, cell):
+        """Get the color for a cell based on its type"""
+        if isinstance(cell, RegularTumorCell):
+            return QColor("#FF5733")  
+        elif isinstance(cell, StemTumorCell):
+            return QColor("#C70039") 
+        elif isinstance(cell, ImmuneCell):
+            if cell.cell_type == 0:
+                return QColor("#33FF57")
+            elif cell.cell_type == 1:
+                return QColor("#33C1FF")  
+            else:
+                return QColor("#00FFFF")
+        else:
+            return QColor("#000000")
 
     def set_edit_mode(self, mode):
         """Set the edit mode (add or remove cells)"""
@@ -294,13 +314,28 @@ class TumorGrowthWindow(QMainWindow):
                     self.grid.remove_cell_at((row, col))
                     self.update_view()
 
-    def initialize_tumor(self, center_x, center_y, initial_radius=3):
+    def initialize_tumor(self, center_x, center_y, initial_radius=3, num_immune=200):
         """Initialize tumor cells in a circular pattern at the center."""
         for i in range(self.grid.rows):
             for j in range(self.grid.cols):
                 distance = np.sqrt((i - center_x) ** 2 + (j - center_y) ** 2)
                 if distance <= initial_radius:
-                    self.grid.add_cell(Cell((i, j)))
+                    rand = np.random.random()
+                    if rand < 0.5:
+                        self.grid.add_cell(RegularTumorCell((i, j)))
+                    else:
+                        self.grid.add_cell(StemTumorCell((i, j)))
+
+        immune_positions = []
+        while len(immune_positions) < num_immune:
+            x = np.random.randint(0, 3)  # перші 3 рядки
+            y = np.random.randint(0, 3)  # перші 3 стовпці
+            if not self.grid.grid[x, y]:
+                immune_positions.append((x, y))
+
+        for pos in immune_positions:
+            cell_type = np.random.choice([0, 1])
+            self.grid.add_cell(ImmuneCell(pos, cell_type))
 
     def update_simulation(self):
         if not self.running or self.current_step >= self.num_steps:
@@ -314,8 +349,12 @@ class TumorGrowthWindow(QMainWindow):
     def update_view(self):
         for i in range(self.grid_size):
             for j in range(self.grid_size):
-                if i < len(self.cell_items) and j < len(self.cell_items[i]) and self.cell_items[i][j] is not None:
-                    color = QColor("red") if self.grid.grid[i, j] == 1 else QColor("white")
+                if 0<=i < len(self.cell_items) and 0<= j < len(self.cell_items[i]) and self.cell_items[i][j] is not None:
+                    cell = self.grid.cells.get((i, j))
+                    if cell:
+                        color = self.get_cell_color(cell)
+                    else:
+                        color = QColor("#FFFFFF")
                     self.cell_items[i][j].setBrush(QBrush(color))
 
 
@@ -324,4 +363,3 @@ if __name__ == "__main__":
     window = TumorGrowthWindow(grid_size=50, num_steps=500)
     window.show()
     sys.exit(app.exec_())
-e
