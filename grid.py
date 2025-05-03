@@ -35,6 +35,11 @@ class Grid:
         else:
             raise ValueError("Cell not found in grid.")
 
+    def remove_cell_at(self, position):
+        """Remove a cell at a specific position."""
+        if position in self.cells:
+            self.remove_cell(self.cells[position])
+
     def move_cell(self, cell, new_position: tuple[int, int]):
         """Move a cell to a new position on the grid."""
         x, y = cell.position
@@ -80,10 +85,6 @@ class Grid:
         for cell in cells:
             cell.make_action(self)
 
-    def remove_cell_at(self, position):
-        if position in self.cells:
-            self.remove_cell(self.cells[position])
-
     def neighbors(self, cell) -> list[tuple[int, int]]:
         """Return a list of neighboring positions for a given cell."""
         x, y = cell.position
@@ -102,13 +103,13 @@ class Grid:
         """Count the number of cells of a specific type in the grid."""
         count = 0
         for cell in self.cells.values():
-                if isinstance(cell_types, tuple):
-                    for cell_type in cell_types:
-                        if isinstance(cell, cell_type):
-                            count += 1
-                else:
-                    if isinstance(cell, cell_types):
+            if isinstance(cell_types, tuple):
+                for cell_type in cell_types:
+                    if isinstance(cell, cell_type):
                         count += 1
+            else:
+                if isinstance(cell, cell_types):
+                    count += 1
         return count
 
     def empty_cells(self):

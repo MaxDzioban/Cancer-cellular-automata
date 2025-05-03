@@ -1,4 +1,5 @@
 """visualize process of tumor growth"""
+import sys
 
 from PyQt5.QtWidgets import (
     QApplication, QGraphicsScene, QGraphicsView, QGraphicsRectItem, 
@@ -10,7 +11,6 @@ from PyQt5.QtGui import QColor, QBrush, QPen, QFont
 
 from cells import Cell, RegularTumorCell, StemTumorCell, ImmuneCell
 from grid import Grid
-import sys
 import numpy as np
 
 
@@ -204,9 +204,14 @@ class TumorGrowthWindow(QMainWindow):
 
     def init_grid(self, size):
         """Initialize the grid and cell visualization"""
-        # Set cell behavior
-        Cell.set_rates(apoptosis=0.01, proliferation=0.3, migration=0.2)
-        
+        # Set cells behavior rates
+        RegularTumorCell.set_rates(apoptosis=0.1, proliferation=0.3, migration=0.2)
+
+        StemTumorCell.set_rates(apoptosis=0.0, proliferation=0.4, migration=0.1)
+        StemTumorCell.set_symmetrical_division_rate(0.5)
+
+        ImmuneCell.set_rates(apoptosis=0.2, proliferation=0.1, migration=0.3)
+
         self.grid_size = size
         
         # Calculate cell size based on grid size
