@@ -107,6 +107,24 @@ class TumorGrowthWindow(QMainWindow):
         info_group.setLayout(info_layout)
         left_panel.addWidget(info_group)
         
+        # Cell Counts group
+        counts_group = QGroupBox("Cell Counts")
+        counts_layout = QFormLayout()
+        self.regular_tumor_count = QLabel("0")
+        self.stem_tumor_count = QLabel("0")
+        self.immune_type0_count = QLabel("0")
+        self.immune_type1_count = QLabel("0")
+        self.generic_count = QLabel("0")
+        
+        counts_layout.addRow("Regular Tumor Cells:", self.regular_tumor_count)
+        counts_layout.addRow("Stem Tumor Cells:", self.stem_tumor_count)
+        counts_layout.addRow("Immune Cells (Type 0):", self.immune_type0_count)
+        counts_layout.addRow("Immune Cells (Type 1):", self.immune_type1_count)
+        counts_layout.addRow("Generic Cells:", self.generic_count)
+        
+        counts_group.setLayout(counts_layout)
+        left_panel.addWidget(counts_group)
+        
         # Options group
         options_group = QGroupBox("Options")
         options_layout = QVBoxLayout()
@@ -128,6 +146,23 @@ class TumorGrowthWindow(QMainWindow):
         self.speed_slider.setInvertedAppearance(True)  # Lower value = faster speed
         speed_layout.addRow("Speed:", self.speed_slider)
         options_layout.addLayout(speed_layout)
+        
+        # Initial counts control
+        initial_counts_layout = QFormLayout()
+        
+        self.initial_tumor_radius = QSpinBox()
+        self.initial_tumor_radius.setRange(1, 10)
+        self.initial_tumor_radius.setValue(3)
+        self.initial_tumor_radius.setSingleStep(1)
+        initial_counts_layout.addRow("Initial Tumor Radius:", self.initial_tumor_radius)
+        
+        self.initial_immune_count = QSpinBox()
+        self.initial_immune_count.setRange(0, 1000)
+        self.initial_immune_count.setValue(200)
+        self.initial_immune_count.setSingleStep(50)
+        initial_counts_layout.addRow("Initial Immune Cells:", self.initial_immune_count)
+        
+        options_layout.addLayout(initial_counts_layout)
         
         options_group.setLayout(options_layout)
         left_panel.addWidget(options_group)
@@ -193,13 +228,14 @@ class TumorGrowthWindow(QMainWindow):
         # Connect signals
         self.grid_size_spinbox.valueChanged.connect(self.update_grid_size)
         self.speed_slider.valueChanged.connect(self.update_speed)
+        self.initial_tumor_radius.valueChanged.connect(self.update_initial_settings)
+        self.initial_immune_count.valueChanged.connect(self.update_initial_settings)
         
         # Timer for updates
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_simulation)
         self.timer.start(self.update_interval)
-        
-        # Set window size
+
         self.resize(900, 600)
 
     def init_grid(self, size):
@@ -213,9 +249,7 @@ class TumorGrowthWindow(QMainWindow):
         ImmuneCell.set_rates(apoptosis=0.2, proliferation=0.1, migration=0.3)
 
         self.grid_size = size
-        
-        # Calculate cell size based on grid size
-        self.cell_size = min(600 // size, 20)  # Max size of 20px, but scale down for larger grids
+        self.cell_size = min(600 // size, 20)
         
         self.grid = Grid(size, size)
         center = size // 2
@@ -227,7 +261,6 @@ class TumorGrowthWindow(QMainWindow):
         """Handle grid size change"""
         new_size = self.grid_size_spinbox.value()
         if new_size != self.grid_size:
-            # clear everythingf
             self.scene.clear()
 
             self.init_grid(new_size)
@@ -295,13 +328,21 @@ class TumorGrowthWindow(QMainWindow):
         self.btn_toggle.setText("Resume" if not self.running else "Pause")
         self.btn_toggle.setStyleSheet("background-color: #007ACC;" if self.running else "background-color: #CC7A00;")
 
+    def update_initial_settings(self):
+        """Update initial settings without regenerating immediately"""
+        # Settings are applied when regenerate is clicked
+        pass
+
     def regenerate(self):
         """Clear the grid and reinitialize the tumor"""
         self.grid.empty_grid()
         center = self.grid_size // 2
-        self.initialize_tumor(center, center)
+        initial_radius = self.initial_tumor_radius.value()
+        num_immune = self.initial_immune_count.value()
+        self.initialize_tumor(center, center, initial_radius, num_immune)
         self.current_step = 0
         self.update_view()
+        self.update_cell_counts()
         self.status_label.setText(f"Step: 0, Cells: {self.grid.num_cells}")
 
     def handle_click(self, event):
@@ -349,7 +390,36 @@ class TumorGrowthWindow(QMainWindow):
         self.grid.make_action()
         self.current_step += 1
         self.update_view()
+        self.update_cell_counts()
         self.status_label.setText(f"Step: {self.current_step}, Cells: {self.grid.num_cells}")
+
+    def update_cell_counts(self):
+        """Update cell count labels with current counts"""
+        # Count each cell type
+        regular_tumor = 0
+        stem_tumor = 0
+        immune_type0 = 0
+        immune_type1 = 0
+        generic = 0
+        
+        for cell in self.grid.cells.values():
+            if isinstance(cell, RegularTumorCell):
+                regular_tumor += 1
+            elif isinstance(cell, StemTumorCell):
+                stem_tumor += 1
+            elif isinstance(cell, ImmuneCell):
+                if cell.cell_type == 0:
+                    immune_type0 += 1
+                elif cell.cell_type == 1:
+                    immune_type1 += 1
+            else:
+                generic += 1
+
+        self.regular_tumor_count.setText(str(regular_tumor))
+        self.stem_tumor_count.setText(str(stem_tumor))
+        self.immune_type0_count.setText(str(immune_type0))
+        self.immune_type1_count.setText(str(immune_type1))
+        self.generic_count.setText(str(generic))
 
     def update_view(self):
         for i in range(self.grid_size):
@@ -361,6 +431,8 @@ class TumorGrowthWindow(QMainWindow):
                     else:
                         color = QColor("#FFFFFF")
                     self.cell_items[i][j].setBrush(QBrush(color))
+
+        self.update_cell_counts()
 
 
 if __name__ == "__main__":

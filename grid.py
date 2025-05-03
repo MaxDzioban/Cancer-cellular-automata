@@ -49,7 +49,9 @@ class Grid:
         if 0 <= new_x < self.rows and 0 <= new_y < self.cols:
             self.grid[x, y] = False
             self.grid[new_x, new_y] = True
-            del self.cells[(x, y)]
+            # Add a check to make sure the cell position exists before deleting
+            if (x, y) in self.cells:
+                del self.cells[(x, y)]
             cell.position = new_position
             self.cells[new_position] = cell
         else:
