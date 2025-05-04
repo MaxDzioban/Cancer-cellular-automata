@@ -83,8 +83,8 @@ class Grid:
 
     def apply_chemotherapy(self):
         """Apply chemotherapy to all cells in the grid."""
-        print(f"Applying chemotherapy to {len(self.cells)} cells.")
-        for cell in self.cells.values():
+        cells = list(self.cells.values())
+        for cell in cells:
             cell.apply_chemotherapy(self)
 
     def make_action(self):

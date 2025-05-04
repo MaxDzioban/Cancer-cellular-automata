@@ -241,12 +241,13 @@ class TumorGrowthWindow(QMainWindow):
     def init_grid(self, size):
         """Initialize the grid and cell visualization"""
         # Set cells behavior rates
-        RegularTumorCell.set_rates(apoptosis=0.1, proliferation=0.3, migration=0.2)
+        RegularTumorCell.set_rates(apoptosis=0.1, proliferation=0.2, migration=0.05)
+        RegularTumorCell.set_max_divisions_number(5)
 
-        StemTumorCell.set_rates(apoptosis=0.0, proliferation=0.4, migration=0.1)
-        StemTumorCell.set_symmetrical_division_rate(0.5)
+        StemTumorCell.set_rates(apoptosis=0, proliferation=0.2, migration=0.05)
+        StemTumorCell.set_asymmetrical_division_rate(0.08)
 
-        ImmuneCell.set_rates(apoptosis=0.2, proliferation=0.1, migration=0.3)
+        ImmuneCell.set_rates(apoptosis=0.05, proliferation=0.1, migration=0.3)
 
         self.grid_size = size
         self.cell_size = min(600 // size, 20)
