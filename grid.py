@@ -1,6 +1,7 @@
 """grid.py"""
 import numpy as np
 from numpy.typing import NDArray
+from immune_utils import recruit_immune_cells
 
 
 
@@ -11,6 +12,8 @@ class Grid:
         self.cols: int = cols
         self.grid: NDArray = np.zeros(shape=(self.rows, self.cols), dtype=bool)
         self.cells: dict[tuple[int, int]: "Cell"] = {}
+        self.kill_count = 0
+        self.failure_count= 0
 
     @property
     def num_cells(self) -> int:
@@ -93,6 +96,9 @@ class Grid:
             for j, cell in enumerate(line):
                 if cell:
                     self.cells[(i, j)].make_action(self)
+        recruit_immune_cells(self, self.kill_count, self.failure_count)
+        self.kill_count = 0
+        self.failure_count= 0
 
     def neighbors(self, cell) -> list[tuple[int, int]]:
         """Return a list of neighboring positions for a given cell."""
@@ -139,3 +145,5 @@ class Grid:
                 if dist < min_dist:
                     min_dist = dist
         return min_dist
+
+    

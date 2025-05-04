@@ -12,6 +12,7 @@ from PyQt5.QtGui import QColor, QBrush, QPen, QFont
 from cells import Cell, RegularTumorCell, StemTumorCell, ImmuneCell
 from grid import Grid
 import numpy as np
+import random
 
 
 class TumorGrowthWindow(QMainWindow):
@@ -304,6 +305,8 @@ class TumorGrowthWindow(QMainWindow):
                 return QColor("#33C1FF")  
             else:
                 return QColor("#00FFFF")
+            
+           
         else:
             return QColor("#000000")
 
@@ -360,7 +363,7 @@ class TumorGrowthWindow(QMainWindow):
                     self.grid.remove_cell_at((row, col))
                     self.update_view()
 
-    def initialize_tumor(self, center_x, center_y, initial_radius=3, num_immune=200):
+    def initialize_tumor(self, center_x, center_y, initial_radius=3, immune_ring_width=7, num_NK_cells=100, num_CTL_cells=80):
         """Initialize tumor cells in a circular pattern at the center."""
         for i in range(self.grid.rows):
             for j in range(self.grid.cols):
@@ -372,17 +375,35 @@ class TumorGrowthWindow(QMainWindow):
                     else:
                         self.grid.add_cell(StemTumorCell((i, j)))
 
-        immune_positions = []
-        while len(immune_positions) < num_immune:
-            x = np.random.randint(0, 3)  # перші 3 рядки
-            y = np.random.randint(0, 3)  # перші 3 стовпці
-            if not self.grid.grid[x, y]:
-                immune_positions.append((x, y))
+        corners = [(0, 0), (0, self.grid_size - 1), (self.grid_size - 1, 0), (self.grid_size - 1, self.grid_size - 1)]
+        edges = [(0, y) for y in range(1, self.grid_size - 1)] + \
+                [(self.grid_size - 1, y) for y in range(1, self.grid_size - 1)] + \
+                [(x, 0) for x in range(1, self.grid_size - 1)] + \
+                [(x, self.grid_size - 1) for x in range(1, self.grid_size - 1)]
+        all_positions = corners + edges
+        num_positions = len(all_positions)
 
-        for pos in immune_positions:
-            cell_type = np.random.choice([0, 1])
-            self.grid.add_cell(ImmuneCell(pos, cell_type))
+        nk_per_position = num_NK_cells // num_positions
+        ctl_per_position = num_CTL_cells // num_positions
+        nk_remainder = num_NK_cells % num_positions
+        ctl_remainder = num_CTL_cells % num_positions
 
+        positions = []
+        for i, pos in enumerate(all_positions):
+            for _ in range(nk_per_position + (1 if i < nk_remainder else 0)):
+                positions.append((pos, 0))  # 0 для NK-клітин
+            for _ in range(ctl_per_position + (1 if i < ctl_remainder else 0)):
+                positions.append((pos, 1))  # 1 для CTL-клітин
+
+        random.shuffle(positions)
+
+        for pos, cell_type in positions:
+            if not self.grid.grid[pos[0], pos[1]]:
+                self.grid.add_cell(ImmuneCell(pos, cell_type))
+
+
+
+                    
     def update_simulation(self):
         if not self.running or self.current_step >= self.num_steps:
             return

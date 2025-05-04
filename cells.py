@@ -120,6 +120,10 @@ class ImmuneCell(Cell):
     def __init__(self, position: tuple[int, int],cell_type: int):
         """Initialize the immune cell with coordinates on a grid."""
         super().__init__(position)
+        self.max_attacks = 3
+        self.attacks_done = 0
+        self.age = 0
+        self.lifespan = random.randint(10, 30)
         self.cell_type = cell_type
         self.kill_count = 0
         self.failure_count = 0
@@ -129,6 +133,7 @@ class ImmuneCell(Cell):
         neighbors = grid.neighbors(self)
         immune_neighbors = [cell for cell in neighbors if isinstance(cell, ImmuneCell)]
         tumor_neighbors = [cell for cell in neighbors if isinstance(cell, (RegularTumorCell, StemTumorCell))]
+        self.attacks_done += 1
         n_I1 = len(immune_neighbors)
         n_PT1 = len(tumor_neighbors)
         if n_PT1 == 0:
@@ -141,10 +146,16 @@ class ImmuneCell(Cell):
                 r_I *= 0.2
             elif isinstance(target_cell, RegularTumorCell):
                 r_I *= 1.0
+            if self.cell_type == 0:
+                r_I *= 0.8
+            elif self.cell_type == 1:
+                r_I *= 1.2
         r_I = min(r_I, 1.0)
+        
 
         if random.random() <= r_I:
-            grid.remove_cell(target_cell)
+            if target_cell in grid.cells.values():
+                grid.remove_cell(target_cell)
             return True
         return False
 
@@ -177,32 +188,47 @@ class ImmuneCell(Cell):
             K1 = 0.2
             r_t = K1 * (n_PT1 / n_I1)
             return min(r_t, 1.0)
-
+    
     def proliferation(self, grid):
-        """Immune cell proliferates to an empty neighboring cell."""
-        killed_cells = self.kill_count
-        failed_cells= self.failure_count
-
-        if killed_cells == 0:
+        """Immune cell proliferates to an empty neighboring cell after successful kill."""
+        if self.kill_count == 0:
             return
 
-        nT = grid.count_cells((RegularTumorCell, StemTumorCell))
-        nPT = grid.count_cells(RegularTumorCell)
+        empty_neighbors =grid.empty_neighbors(self)
 
-        if nT == 0:
+        if not empty_neighbors:
             return
 
-        newborns = int((killed_cells - failed_cells) * (nPT / nT))
+        position = random.choice(empty_neighbors)
+        new_cell = ImmuneCell(position, cell_type=self.cell_type)
+        grid.add_cell(new_cell)
+        self.kill_count = 0
 
-        if newborns > 0:
-            empty_cells = grid.empty_cells()
-            for _ in range(min(newborns, len(empty_cells))):
-                position = random.choice(empty_cells)
-                new_cell = ImmuneCell(position, cell_type='CTL')  # CTL створюємо
-                grid.add_cell(new_cell)
-                empty_cells.remove(position)
-            self.kill_count = 0
-            self.failure_count = 0
+    # def proliferation(self, grid):
+    #     """Immune cell proliferates to an empty neighboring cell."""
+    #     killed_cells = self.kill_count
+    #     failed_cells= self.failure_count
+
+    #     if killed_cells == 0:
+    #         return
+
+    #     nT = grid.count_cells((RegularTumorCell, StemTumorCell))
+    #     nPT = grid.count_cells(RegularTumorCell)
+
+    #     if nT == 0:
+    #         return
+
+    #     newborns = int((killed_cells - failed_cells) * (nPT / nT))
+
+    #     if newborns > 0:
+    #         empty_cells = grid.empty_cells()
+    #         for _ in range(min(newborns, len(empty_cells))):
+    #             position = random.choice(empty_cells)
+    #             new_cell = ImmuneCell(position, cell_type='CTL')  # CTL створюємо
+    #             grid.add_cell(new_cell)
+    #             empty_cells.remove(position)
+    #         self.kill_count = 0
+    #         self.failure_count = 0
 
     def make_action(self, grid):
         """Make action for the immune cell."""
@@ -213,25 +239,33 @@ class ImmuneCell(Cell):
                 for target in tumor_neighbors:
                     result = self.attack(target, grid)
                     if result:
-                        self.kill_count += 1
+                        grid.kill_count += 1
+                        self.proliferation(grid)
+                        if self.attacks_done >= self.max_attacks:
+                            if self in grid.cells.values():
+                                grid.remove_cell(self)
                     else:
-                        self.failure_count += 1
+                        grid.failure_count += 1
                         death_prob = self.get_failure_death_prob(grid)
-                        if random.random() <= death_prob:
-                            grid.remove_cell(self)
+                        if random.random() <= death_prob or  self.attacks_done >= self.max_attacks:
+                            if self in grid.cells.values():
+                                grid.remove_cell(self)
                             return
             elif self.cell_type == 0:
                 target = random.choice(tumor_neighbors)
                 result = self.attack(target, grid)
                 if result:
-                    self.kill_count += 1
-                    grid.remove_cell(self)
+                    grid.kill_count += 1
+                    self.proliferation(grid) 
+                    if self in grid.cells.values():
+                        grid.remove_cell(self)
 
                 else:
-                    self.failure_count += 1
+                    grid.failure_count += 1
                     death_prob = self.get_failure_death_prob(grid)
                     if random.random() <= death_prob:
-                        grid.remove_cell(self)
+                        if self in grid.cells.values():
+                            grid.remove_cell(self)
         else:
             self.migration(grid)
-        self.proliferation(grid)
+    
