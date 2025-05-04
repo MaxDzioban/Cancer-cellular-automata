@@ -215,8 +215,7 @@ class ImmuneCell(Cell):
     
     def proliferation(self, grid):
         """Immune cell proliferates to an empty neighboring cell after successful kill."""
-        if self.kill_count == 0:
-            return
+
 
         empty_neighbors =grid.empty_neighbors(self)
 
@@ -226,7 +225,7 @@ class ImmuneCell(Cell):
         position = random.choice(empty_neighbors)
         new_cell = ImmuneCell(position, cell_type=self.cell_type)
         grid.add_cell(new_cell)
-        self.kill_count = 0
+        
 
     # def proliferation(self, grid):
     #     """Immune cell proliferates to an empty neighboring cell."""

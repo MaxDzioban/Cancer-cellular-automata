@@ -364,7 +364,7 @@ class TumorGrowthWindow(QMainWindow):
                     self.grid.remove_cell_at((row, col))
                     self.update_view()
 
-    def initialize_tumor(self, center_x, center_y, initial_radius=3, immune_ring_width=7, num_NK_cells=100, num_CTL_cells=80):
+    def initialize_tumor(self, center_x, center_y, initial_radius=3, num_NK_cells=10, num_CTL_cells=10):
         """Initialize tumor cells in a circular pattern at the center."""
         for i in range(self.grid.rows):
             for j in range(self.grid.cols):
