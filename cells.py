@@ -70,10 +70,10 @@ class Cell:
     def apply_chemotherapy(self, grid):
         """Apply chemotherapy to the cell."""
         self.proliferation_decrease_coef += self.PROLIFERATION_DECREASE
-        print(self.proliferation_decrease_coef)
-        if self.proliferation_decrease_coef >= 1:
-            self.apoptosis(grid)
-            return
+        # print(self.proliferation_decrease_coef)
+        # if self.proliferation_decrease_coef >= 1:
+            # self.apoptosis(grid)
+            # return
         if random.random() <= self.DEATH_CHEMOTERAPY_CHANCE:
             self.apoptosis(grid)
 
