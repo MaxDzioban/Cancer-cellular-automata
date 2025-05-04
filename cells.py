@@ -5,11 +5,14 @@ import random
 class Cell:
     """Class representing a cell in a grid."""
     RATES = { 'apoptosis': None, 'proliferation': None, 'migration': None}
+    PROLIFERATION_DECREASE = 0.05
+    DEATH_CHEMOTERAPY_CHANCE = 0.02
 
-    def __init__(self, position: tuple[int, int]):
+    def __init__(self, position: tuple[int, int], proliferation_decrease_coef: float=0.0):
         """Initialize the cell with coordinates on a grid"""
         self.position = position  # Tuple of (x, y) coordinates on a grid
         self.is_tumor_cell = False
+        self.proliferation_decrease_coef = proliferation_decrease_coef
 
     @classmethod
     def set_rates(cls, apoptosis: float, proliferation: float, migration: float):
@@ -25,7 +28,7 @@ class Cell:
         """Determine the action of the cell based on its rates."""
         if random.random() <= self.RATES['apoptosis']:
             self.apoptosis(grid)
-        elif random.random() <= self.RATES['proliferation']:
+        elif random.random() <= self.RATES['proliferation'] * (1-self.proliferation_decrease_coef):
             self.proliferation(grid)
         elif random.random() <= self.RATES['migration']:
             self.migration(grid)
@@ -42,37 +45,56 @@ class Cell:
 
     def proliferation(self, grid):
         """Cell proliferates to an empty neighboring cell."""
-        print(f"Cell at {self.position} proliferates.")
+        # print(f"Cell at {self.position} proliferates.")
         empty_neighbors = grid.empty_neighbors(self)
         if empty_neighbors:
             new_position = random.choice(empty_neighbors)
-            new_cell = Cell(new_position)
+            new_cell = Cell(new_position, self.proliferation_decrease_coef)
             grid.add_cell(new_cell)
 
     def migration(self, grid):
         """Cell migrates to an empty neighboring cell."""
-        print(f"Cell at {self.position} migrates.")
-        empty_neighbors = grid.empty_neighbors(self)
-        if empty_neighbors:
-            new_position = random.choice(empty_neighbors)
-            grid.move_cell(self, new_position)
-        else:
-            print("No empty neighbors to migrate to.")
+        # print(f"Cell at {self.position} migrates.")
+        # empty_neighbors = grid.empty_neighbors(self)
+        # if empty_neighbors:
+        #     new_position = random.choice(empty_neighbors)
+        #     grid.move_cell(self, new_position)
+        # else:
+        #     print("No empty neighbors to migrate to.")
+        pass
 
     def quiscence(self):
         """Cell remains quiescent."""
-        print(f"Cell at {self.position} remains quiescent.")
+        # print(f"Cell at {self.position} remains quiescent.")
+
+    def apply_chemotherapy(self, grid):
+        """Apply chemotherapy to the cell."""
+        self.proliferation_decrease_coef += self.PROLIFERATION_DECREASE
+        # print(self.proliferation_decrease_coef)
+        # if self.proliferation_decrease_coef >= 1:
+            # self.apoptosis(grid)
+            # return
+        if random.random() <= self.DEATH_CHEMOTERAPY_CHANCE:
+            self.apoptosis(grid)
 
 
 class RegularTumorCell(Cell):
     """Class representing a regular tumor cell."""
     RATES = { 'apoptosis': None, 'proliferation': None, 'migration': None}
+    MAX_DIVISIONS = 5
+    PROLIFERATION_DECREASE = 0.05
+    DEATH_CHEMOTERAPY_CHANCE = 0.02
 
-    def __init__(self, position: tuple[int, int], p_remaining: int=5):
+    def __init__(self, position: tuple[int, int], proliferation_decrease_coef: float=0.0, p_remaining: int=MAX_DIVISIONS):
         """Initialize the regular tumor cell."""
-        super().__init__(position)
+        super().__init__(position, proliferation_decrease_coef)
         self.p_remaining = p_remaining  # Number of divisions remaining
         self.is_tumor_cell = True
+
+    @classmethod
+    def set_max_divisions_number(cls, max_divisions: int):
+        """Set the maximum number of divisions for regular tumor cells."""
+        cls.MAX_DIVISIONS = max_divisions
 
     def proliferation(self, grid):
         """RTC divides to empty neighboring position if p_remaining > 0."""
@@ -83,41 +105,45 @@ class RegularTumorCell(Cell):
         if empty_neighbors:
             new_position = random.choice(empty_neighbors)
             self.p_remaining -= 1
-            new_cell = RegularTumorCell(new_position, self.p_remaining)
+            new_cell = RegularTumorCell(new_position, self.proliferation_decrease_coef, self.p_remaining)
             grid.add_cell(new_cell)
 
 
 class StemTumorCell(Cell):
     """Class representing a stem tumor cell."""
-    RATES = { 'apoptosis': None, 'proliferation': None, 'migration': None, 'symmetrical_division': None}
+    RATES = { 'apoptosis': None, 'proliferation': None, 'migration': None, 'asymmetrical_division': None}
+    PROLIFERATION_DECREASE = 0.05
+    DEATH_CHEMOTERAPY_CHANCE = 0.02
 
-    def __init__(self, position: tuple[int, int]):
+    def __init__(self, position: tuple[int, int], proliferation_decrease_coef: float=0.0):
         """Initialize the stem tumor cell."""
-        super().__init__(position)
+        super().__init__(position, proliferation_decrease_coef)
         self.is_tumor_cell = True
 
     @classmethod
-    def set_symmetrical_division_rate(cls, rate: float):
+    def set_asymmetrical_division_rate(cls, rate: float):
         """Set the rate of stem cell generation."""
-        cls.RATES['symmetrical_division'] = rate
+        cls.RATES['asymmetrical_division'] = rate
 
     def proliferation(self, grid):
         """CSC can divide symmetrically or asymmetrically."""
         empty_neighbors = grid.empty_neighbors(self)
         if empty_neighbors:
             new_position = random.choice(empty_neighbors)
-            if random.random() <= self.RATES['symmetrical_division']:
-                new_cell = StemTumorCell(new_position)
+            if random.random() <= self.RATES['asymmetrical_division']:
+                new_cell = StemTumorCell(new_position, self.proliferation_decrease_coef)
             else:
-                new_cell = RegularTumorCell(new_position)
+                new_cell = RegularTumorCell(new_position, self.proliferation_decrease_coef)
             grid.add_cell(new_cell)
 
 
 class ImmuneCell(Cell):
     """Class representing an immune cell."""
     RATES = { 'apoptosis': None, 'proliferation': None, 'migration': None}
+    PROLIFERATION_DECREASE = 0.05
+    DEATH_CHEMOTERAPY_CHANCE = 0.02
 
-    def __init__(self, position: tuple[int, int],cell_type: int):
+    def __init__(self, position: tuple[int, int], cell_type: int, proliferation_decrease_coef: float=0.0):
         """Initialize the immune cell with coordinates on a grid."""
         super().__init__(position)
         self.max_attacks = 3
@@ -125,9 +151,7 @@ class ImmuneCell(Cell):
         self.age = 0
         self.lifespan = random.randint(10, 30)
         self.cell_type = cell_type
-        self.kill_count = 0
-        self.failure_count = 0
-
+       
     def attack(self, target_cell, grid):
         """Immune cell attacks a tumor cell."""
         neighbors = grid.neighbors(self)
