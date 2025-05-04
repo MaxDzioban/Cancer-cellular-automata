@@ -81,11 +81,18 @@ class Grid:
         for cell in cells:
             self.add_cell(cell)
 
+    def apply_chemotherapy(self):
+        """Apply chemotherapy to all cells in the grid."""
+        print(f"Applying chemotherapy to {len(self.cells)} cells.")
+        for cell in self.cells.values():
+            cell.apply_chemotherapy(self)
+
     def make_action(self):
         """Make action for each cell in the grid."""
-        cells = list(self.cells.values())
-        for cell in cells:
-            cell.make_action(self)
+        for i, line in enumerate(self.grid):
+            for j, cell in enumerate(line):
+                if cell:
+                    self.cells[(i, j)].make_action(self)
 
     def neighbors(self, cell) -> list[tuple[int, int]]:
         """Return a list of neighboring positions for a given cell."""
