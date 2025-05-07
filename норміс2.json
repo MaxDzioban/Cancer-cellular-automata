@@ -1,0 +1,14 @@
+{
+  "type": "immune",
+  "name": "норміс2",
+  "color": [
+    255,
+    255,
+    0
+  ],
+  "rates": {
+    "apoptosis": 0.1,
+    "proliferation": 0.7,
+    "migration": 0.5
+  }
+}
