@@ -14,11 +14,19 @@ class Cell:
         self.proliferation_decrease_coef = proliferation_decrease_coef
 
     @classmethod
-    def set_rates(cls, apoptosis: float, proliferation: float, migration: float):
-        """Set the rates for the cell's actions."""
-        cls.RATES['apoptosis'] = apoptosis
-        cls.RATES['proliferation'] = proliferation
-        cls.RATES['migration'] = migration
+    def set_rates(cls, apoptosis_rate: float, proliferation_rate: float, migration_rate: float):
+        """
+        Set the rates for the cell's actions.
+
+        Summ of rates must be between 0 and 1.
+        Args:
+            apoptosis_rate (float): Chance of cell to undergo apoptosis at each step.
+            proliferation_rate (float): Chance of cell to proliferate at each step.
+            migration_rate (float): Chance of cell to migrate at each step.
+        """
+        cls.RATES['apoptosis'] = apoptosis_rate
+        cls.RATES['proliferation'] = proliferation_rate
+        cls.RATES['migration'] = migration_rate
 
     def make_action(self, grid):
         """Determine the action of the cell based on its rates."""
@@ -90,9 +98,40 @@ class RegularTumorCell(Cell):
         self.is_tumor_cell = True
 
     @classmethod
-    def set_max_divisions_number(cls, max_divisions: int):
-        """Set the maximum number of divisions for regular tumor cells."""
+    def set_constants(cls, apoptosis_rate: float,
+                    proliferation_rate: float,
+                    migration_rate: float,
+                    max_divisions: int,
+                    proliferation_decrease_coef: float,
+                    death_chemotherapy_chance: float):
+        """
+        Set the constants for the regular tumor cell.
+        
+        Args:
+            Summ of rates must be between 0 and 1.
+            apoptosis_rate (float): Chance of cell to undergo apoptosis at each step.
+            proliferation_rate (float): Chance of cell to proliferate at each step.
+            migration_rate (float): Chance of cell to migrate at each step.
+
+            max_divisions (int): Maximum number of divisions for the cell.
+            proliferation_decrease_coef (float): Coefficient for decreasing proliferation chance
+            after applying chemotherapy, must be between 0 and 1.
+            death_chemotherapy_chance (float): Chance of cell death due to chemotherapy,
+            must be between 0 and 1.
+        """
+
+        if not 0 < (apoptosis_rate+proliferation_rate+migration_rate) <= 1:
+            raise ValueError("Rates must sum must be between 0 and 1.")
+        if not 0 <= proliferation_decrease_coef <= 1:
+            raise ValueError("Proliferation decrease coefficient must be between 0 and 1.")
+        if not 0 <= death_chemotherapy_chance <= 1:
+            raise ValueError("Death chemotherapy chance must be between 0 and 1.")
+
+        cls.set_rates(apoptosis_rate, proliferation_rate, migration_rate)
+
         cls.MAX_DIVISIONS = max_divisions
+        cls.PROLIFERATION_DECREASE = proliferation_decrease_coef
+        cls.DEATH_CHEMOTERAPY_CHANCE = death_chemotherapy_chance
 
     def proliferation(self, grid):
         """RTC divides to empty neighboring position if p_remaining > 0."""
@@ -119,16 +158,50 @@ class StemTumorCell(Cell):
         self.is_tumor_cell = True
 
     @classmethod
-    def set_asymmetrical_division_rate(cls, rate: float):
-        """Set the rate of stem cell generation."""
-        cls.RATES['asymmetrical_division'] = rate
+    def set_constants(cls, apoptosis_rate: float,
+                    proliferation_rate: float,
+                    migration_rate: float,
+                    symmetrical_division_rate: float,
+                    proliferation_decrease_coef: float,
+                    death_chemotherapy_chance: float):
+        """
+        Set the constants for the stem tumor cell.
+
+        Args:
+            Summ of rates must be between 0 and 1.
+            apoptosis_rate (float): Chance of cell to undergo apoptosis at each step.
+            proliferation_rate (float): Chance of cell to proliferate at each step.
+            migration_rate (float): Chance of cell to migrate at each step.
+
+            symmetrical_division_rate (float): Chance of cell to divide symmetrically (produce one new STC),
+            must be between 0 and 1.
+            proliferation_decrease_coef (float): Coefficient for decreasing proliferation chance
+            after applying chemotherapy, must be between 0 and 1.
+            death_chemotherapy_chance (float): Chance of cell death due to chemotherapy,
+            must be between 0 and 1.
+        """
+
+        if not 0 < (apoptosis_rate+proliferation_rate+migration_rate) <= 1:
+            raise ValueError("Rates must sum must be between 0 and 1.")
+        if not 0 <= symmetrical_division_rate <= 1:
+            raise ValueError("Asymmetrical division rate must be between 0 and 1.")
+        if not 0 <= proliferation_decrease_coef <= 1:
+            raise ValueError("Proliferation decrease coefficient must be between 0 and 1.")
+        if not 0 <= death_chemotherapy_chance <= 1:
+            raise ValueError("Death chemotherapy chance must be between 0 and 1.")
+
+        cls.set_rates(apoptosis_rate, proliferation_rate, migration_rate)
+
+        cls.RATES['symmetrical_division'] = symmetrical_division_rate
+        cls.PROLIFERATION_DECREASE = proliferation_decrease_coef
+        cls.DEATH_CHEMOTERAPY_CHANCE = death_chemotherapy_chance
 
     def proliferation(self, grid):
         """CSC can divide symmetrically or asymmetrically."""
         empty_neighbors = grid.empty_neighbors(self)
         if empty_neighbors:
             new_position = random.choice(empty_neighbors)
-            if random.random() <= self.RATES['asymmetrical_division']:
+            if random.random() <= self.RATES['symmetrical_division']:
                 new_cell = StemTumorCell(new_position, self.proliferation_decrease_coef)
             else:
                 new_cell = RegularTumorCell(new_position, self.proliferation_decrease_coef)
@@ -149,6 +222,39 @@ class ImmuneCell(Cell):
         self.age = 0
         self.lifespan = random.randint(10, 30)
         self.cell_type = cell_type
+
+    @classmethod
+    def set_constants(cls, apoptosis_rate: float,
+                    proliferation_rate: float,
+                    migration_rate: float,
+                    proliferation_decrease_coef: float,
+                    death_chemotherapy_chance: float):
+        """
+        Set the rates for the immune cell.
+
+        Args:
+            Summ of rates must be between 0 and 1.
+            apoptosis_rate (float): Chance of cell to undergo apoptosis at each step.
+            proliferation_rate (float): Chance of cell to proliferate at each step.
+            migration_rate (float): Chance of cell to migrate at each step.
+
+            proliferation_decrease_coef (float): Coefficient for decreasing proliferation chance
+            after applying chemotherapy, must be between 0 and 1.
+            death_chemotherapy_chance (float): Chance of cell death due to chemotherapy,
+            must be between 0 and 1.
+        """
+
+        if not 0 < (apoptosis_rate+proliferation_rate+migration_rate) <= 1:
+            raise ValueError("Rates must sum must be between 0 and 1.")
+        if not 0 <= proliferation_decrease_coef <= 1:
+            raise ValueError("Proliferation decrease coefficient must be between 0 and 1.")
+        if not 0 <= death_chemotherapy_chance <= 1:
+            raise ValueError("Death chemotherapy chance must be between 0 and 1.")
+
+        cls.set_rates(apoptosis_rate, proliferation_rate, migration_rate)
+
+        cls.PROLIFERATION_DECREASE = proliferation_decrease_coef
+        cls.DEATH_CHEMOTERAPY_CHANCE = death_chemotherapy_chance
 
     def attack(self, target_cell, grid):
         """Immune cell attacks a tumor cell."""
