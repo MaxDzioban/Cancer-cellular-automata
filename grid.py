@@ -2,8 +2,7 @@
 import numpy as np
 from numpy.typing import NDArray
 from immune_utils import recruit_immune_cells
-
-
+import random
 
 class Grid:
     """Class representing a grid of cells."""
@@ -146,4 +145,7 @@ class Grid:
                     min_dist = dist
         return min_dist
 
-    
+    def get_random_empty_position(self):
+        """Find a random empty spot on the grid"""
+        empty = [(i, j) for i in range(self.rows) for j in range(self.cols) if not self.grid[i, j]]
+        return random.choice(empty) if empty else None

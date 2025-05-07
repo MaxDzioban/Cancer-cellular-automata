@@ -1,10 +1,9 @@
 """cells.py"""
 import random
 
-
 class Cell:
     """Class representing a cell in a grid."""
-    RATES = { 'apoptosis': None, 'proliferation': None, 'migration': None}
+    RATES = { 'apoptosis': 0.0, 'proliferation': 0.0, 'migration': 0.0 }
     PROLIFERATION_DECREASE = 0.05
     DEATH_CHEMOTERAPY_CHANCE = 0.02
 
@@ -17,9 +16,6 @@ class Cell:
     @classmethod
     def set_rates(cls, apoptosis: float, proliferation: float, migration: float):
         """Set the rates for the cell's actions."""
-        if not 0 < (apoptosis+proliferation+migration) <= 1:
-            raise ValueError("Rates must sum must be between 0 and 1.")
-
         cls.RATES['apoptosis'] = apoptosis
         cls.RATES['proliferation'] = proliferation
         cls.RATES['migration'] = migration
@@ -80,7 +76,7 @@ class Cell:
 
 class RegularTumorCell(Cell):
     """Class representing a regular tumor cell."""
-    RATES = { 'apoptosis': None, 'proliferation': None, 'migration': None}
+    RATES = { 'apoptosis': 0.0, 'proliferation': 0.0, 'migration': 0.0 }
     MAX_DIVISIONS = 5
     PROLIFERATION_DECREASE = 0.05
     DEATH_CHEMOTERAPY_CHANCE = 0.02
@@ -88,7 +84,9 @@ class RegularTumorCell(Cell):
     def __init__(self, position: tuple[int, int], proliferation_decrease_coef: float=0.0, p_remaining: int=MAX_DIVISIONS):
         """Initialize the regular tumor cell."""
         super().__init__(position, proliferation_decrease_coef)
-        self.p_remaining = p_remaining  # Number of divisions remaining
+        self.p_remaining = p_remaining
+        # Number of divisions remaining
+
         self.is_tumor_cell = True
 
     @classmethod
@@ -111,7 +109,7 @@ class RegularTumorCell(Cell):
 
 class StemTumorCell(Cell):
     """Class representing a stem tumor cell."""
-    RATES = { 'apoptosis': None, 'proliferation': None, 'migration': None, 'asymmetrical_division': None}
+    RATES = { 'apoptosis': 0.0, 'proliferation': 0.0, 'migration': 0.0 }
     PROLIFERATION_DECREASE = 0.05
     DEATH_CHEMOTERAPY_CHANCE = 0.02
 
@@ -139,7 +137,7 @@ class StemTumorCell(Cell):
 
 class ImmuneCell(Cell):
     """Class representing an immune cell."""
-    RATES = { 'apoptosis': None, 'proliferation': None, 'migration': None}
+    RATES = { 'apoptosis': 0.0, 'proliferation': 0.0, 'migration': 0.0 }
     PROLIFERATION_DECREASE = 0.05
     DEATH_CHEMOTERAPY_CHANCE = 0.02
 
@@ -151,7 +149,7 @@ class ImmuneCell(Cell):
         self.age = 0
         self.lifespan = random.randint(10, 30)
         self.cell_type = cell_type
-       
+
     def attack(self, target_cell, grid):
         """Immune cell attacks a tumor cell."""
         neighbors = grid.neighbors(self)
@@ -215,80 +213,43 @@ class ImmuneCell(Cell):
     
     def proliferation(self, grid):
         """Immune cell proliferates to an empty neighboring cell after successful kill."""
-
-
         empty_neighbors =grid.empty_neighbors(self)
-
         if not empty_neighbors:
             return
-
         position = random.choice(empty_neighbors)
         new_cell = ImmuneCell(position, cell_type=self.cell_type)
         grid.add_cell(new_cell)
-        
 
-    # def proliferation(self, grid):
-    #     """Immune cell proliferates to an empty neighboring cell."""
-    #     killed_cells = self.kill_count
-    #     failed_cells= self.failure_count
-
-    #     if killed_cells == 0:
-    #         return
-
-    #     nT = grid.count_cells((RegularTumorCell, StemTumorCell))
-    #     nPT = grid.count_cells(RegularTumorCell)
-
-    #     if nT == 0:
-    #         return
-
-    #     newborns = int((killed_cells - failed_cells) * (nPT / nT))
-
-    #     if newborns > 0:
-    #         empty_cells = grid.empty_cells()
-    #         for _ in range(min(newborns, len(empty_cells))):
-    #             position = random.choice(empty_cells)
-    #             new_cell = ImmuneCell(position, cell_type='CTL')  # CTL створюємо
-    #             grid.add_cell(new_cell)
-    #             empty_cells.remove(position)
-    #         self.kill_count = 0
-    #         self.failure_count = 0
 
     def make_action(self, grid):
-        """Make action for the immune cell."""
+        """Make action for the immune cell based on its type and local context."""
         neighbors = grid.neighbors(self)
         tumor_neighbors = [cell for cell in neighbors if isinstance(cell, (RegularTumorCell, StemTumorCell))]
+
         if tumor_neighbors:
             if self.cell_type == 1:
                 for target in tumor_neighbors:
-                    result = self.attack(target, grid)
-                    if result:
+                    if self.attack(target, grid):
                         grid.kill_count += 1
                         self.proliferation(grid)
                         if self.attacks_done >= self.max_attacks:
-                            if self in grid.cells.values():
-                                grid.remove_cell(self)
+                            grid.remove_cell(self)
+                        return
                     else:
                         grid.failure_count += 1
-                        death_prob = self.get_failure_death_prob(grid)
-                        if random.random() <= death_prob or  self.attacks_done >= self.max_attacks:
-                            if self in grid.cells.values():
-                                grid.remove_cell(self)
+                        if random.random() <= self.get_failure_death_prob(grid) or self.attacks_done >= self.max_attacks:
+                            grid.remove_cell(self)
                             return
             elif self.cell_type == 0:
+                # NK — менш агресивні
                 target = random.choice(tumor_neighbors)
-                result = self.attack(target, grid)
-                if result:
+                if self.attack(target, grid):
                     grid.kill_count += 1
-                    self.proliferation(grid) 
-                    if self in grid.cells.values():
-                        grid.remove_cell(self)
-
+                    self.proliferation(grid)
+                    grid.remove_cell(self)
                 else:
                     grid.failure_count += 1
-                    death_prob = self.get_failure_death_prob(grid)
-                    if random.random() <= death_prob:
-                        if self in grid.cells.values():
-                            grid.remove_cell(self)
+                    if random.random() <= self.get_failure_death_prob(grid):
+                        grid.remove_cell(self)
         else:
             self.migration(grid)
-    
