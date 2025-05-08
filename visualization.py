@@ -313,6 +313,41 @@ class TumorGrowthWindow(QMainWindow):
         chemo_group.setLayout(chemo_layout)
         global_params_layout.addWidget(chemo_group)
 
+        self.immunotherapy_active = False
+        self.immunotherapy_start_step = 0
+        self.immunotherapy_duration = 50  # Значення за замовчуванням
+        self.immunotherapy_end_step = 0
+        self.immunotherapy_iteration_counter = 0
+        # імунна терапія
+        immuno_group = QGroupBox("Імунна терапія")
+        immuno_layout = QVBoxLayout()
+
+        # кнопка ручного запуску
+        self.btn_apply_immuno = QPushButton("Застосувати імунну терапію")
+        self.btn_apply_immuno.clicked.connect(self.start_immunotherapy)
+        immuno_layout.addWidget(self.btn_apply_immuno)
+
+        # Спінбокс для тривалості
+        self.immuno_duration_spinbox = QSpinBox()
+        self.immuno_duration_spinbox.setRange(10, 1000)
+        self.immuno_duration_spinbox.setValue(50)
+        immuno_layout.addWidget(QLabel("Тривалість:"))
+        immuno_layout.addWidget(self.immuno_duration_spinbox)
+        # чекбокс для автозастосування
+        self.immuno_every_n_checkbox = QCheckBox("Автоматично кожні N кроків")
+        immuno_layout.addWidget(self.immuno_every_n_checkbox)
+
+        # спінбокс для вибору N
+        self.immuno_interval_spinbox = QSpinBox()
+        self.immuno_interval_spinbox.setRange(1, 10000)
+        self.immuno_interval_spinbox.setValue(50)
+        immuno_layout.addWidget(QLabel("Інтервал N:"))
+        immuno_layout.addWidget(self.immuno_interval_spinbox)
+
+        immuno_group.setLayout(immuno_layout)
+        global_params_layout.addWidget(immuno_group)
+
+
         # Immune Cell Parameters 
         self.immune_apoptosis = QDoubleSpinBox()
         self.immune_apoptosis.setRange(0, 1)
@@ -373,8 +408,8 @@ class TumorGrowthWindow(QMainWindow):
     def init_grid(self, size):
         """Initialize the grid and cell visualization"""
         RegularTumorCell.set_constants(
-            apoptosis_rate=0.1,
-            proliferation_rate=0.2,
+            apoptosis_rate=0.05,
+            proliferation_rate=0.3,
             migration_rate=0.05,
             max_divisions=5,
             proliferation_decrease_coef=0.05,
@@ -383,9 +418,9 @@ class TumorGrowthWindow(QMainWindow):
 
         StemTumorCell.set_constants(
             apoptosis_rate=0,
-            proliferation_rate=0.2,
+            proliferation_rate=0.3,
             migration_rate=0.05,
-            symmetrical_division_rate=0.08,
+            symmetrical_division_rate=0.1,
             proliferation_decrease_coef=0.05,
             death_chemotherapy_chance=0.02
         )
@@ -604,31 +639,31 @@ class TumorGrowthWindow(QMainWindow):
                     else:
                         self.grid.add_cell(StemTumorCell((i, j)))
 
-        corners = [(0, 0), (0, self.grid_size - 1), (self.grid_size - 1, 0), (self.grid_size - 1, self.grid_size - 1)]
-        edges = [(0, y) for y in range(1, self.grid_size - 1)] + \
-                [(self.grid_size - 1, y) for y in range(1, self.grid_size - 1)] + \
-                [(x, 0) for x in range(1, self.grid_size - 1)] + \
-                [(x, self.grid_size - 1) for x in range(1, self.grid_size - 1)]
-        all_positions = corners + edges
-        num_positions = len(all_positions)
+        # corners = [(0, 0), (0, self.grid_size - 1), (self.grid_size - 1, 0), (self.grid_size - 1, self.grid_size - 1)]
+        # edges = [(0, y) for y in range(1, self.grid_size - 1)] + \
+        #         [(self.grid_size - 1, y) for y in range(1, self.grid_size - 1)] + \
+        #         [(x, 0) for x in range(1, self.grid_size - 1)] + \
+        #         [(x, self.grid_size - 1) for x in range(1, self.grid_size - 1)]
+        # all_positions = corners + edges
+        # num_positions = len(all_positions)
 
-        nk_per_position = num_NK_cells // num_positions
-        ctl_per_position = num_CTL_cells // num_positions
-        nk_remainder = num_NK_cells % num_positions
-        ctl_remainder = num_CTL_cells % num_positions
+        # nk_per_position = num_NK_cells // num_positions
+        # ctl_per_position = num_CTL_cells // num_positions
+        # nk_remainder = num_NK_cells % num_positions
+        # ctl_remainder = num_CTL_cells % num_positions
 
-        positions = []
-        for i, pos in enumerate(all_positions):
-            for _ in range(nk_per_position + (1 if i < nk_remainder else 0)):
-                positions.append((pos, 0))  # 0 для NK-клітин
-            for _ in range(ctl_per_position + (1 if i < ctl_remainder else 0)):
-                positions.append((pos, 1))  # 1 для CTL-клітин
+        # positions = []
+        # for i, pos in enumerate(all_positions):
+        #     for _ in range(nk_per_position + (1 if i < nk_remainder else 0)):
+        #         positions.append((pos, 0))  # 0 для NK-клітин
+        #     for _ in range(ctl_per_position + (1 if i < ctl_remainder else 0)):
+        #         positions.append((pos, 1))  # 1 для CTL-клітин
 
-        random.shuffle(positions)
+        # random.shuffle(positions)
 
-        for pos, cell_type in positions:
-            if not self.grid.grid[pos[0], pos[1]]:
-                self.grid.add_cell(ImmuneCell(pos, cell_type))
+        # for pos, cell_type in positions:
+        #     if not self.grid.grid[pos[0], pos[1]]:
+        #         self.grid.add_cell(ImmuneCell(pos, cell_type))
 
 
                     
@@ -640,6 +675,13 @@ class TumorGrowthWindow(QMainWindow):
     
         if not self.running or self.current_step >= self.num_steps:
             return
+        if self.immunotherapy_active:
+            # self.grid.apply_immunotherapy() 
+            self.immunotherapy_iteration_counter += 1  
+            if self.immunotherapy_iteration_counter >= 20:
+                self.immunotherapy_active = False
+                QMessageBox.information(self, "Імунна терапія", "Імунну терапію завершено (20 ітерацій).")
+                self.grid.reset_all_immune_cells()  
 
         self.grid.make_action()
         self.current_step += 1
@@ -843,6 +885,16 @@ class TumorGrowthWindow(QMainWindow):
         # print(f"[Immune] A: {i_apop:.2f}, P: {i_prolif:.2f}, M: {i_mig:.2f}")
 
 
+    def start_immunotherapy(self):
+        """Start immunotherapy for a specific duration."""
+        self.immunotherapy_active = True
+        self.immunotherapy_start_step = self.current_step
+        self.immunotherapy_duration = self.immuno_duration_spinbox.value()
+        self.immunotherapy_end_step = self.immunotherapy_start_step + self.immunotherapy_duration
+        self.immunotherapy_iteration_counter = 0  # Скидання лічильника
+        self.grid.apply_immunotherapy()
+        self.update_view()
+        QMessageBox.information(self, "Імунна терапія", f"Імунну терапію застосовано на {self.immunotherapy_duration} кроків.")
 
 class MainMenu(QMainWindow):
     def __init__(self, api_key):
