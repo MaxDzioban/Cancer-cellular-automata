@@ -226,18 +226,23 @@ class StemTumorCell(Cell):
 
 class ImmuneCell(Cell):
     """Class representing an immune cell."""
-    RATES = { 'apoptosis': 0.0, 'proliferation': 0.0, 'migration': 0.0 }
+    RATES = { 'apoptosis': 0.0, 'proliferation': 0.3, 'migration': 0.0 }
     PROLIFERATION_DECREASE = 0.05
-    DEATH_CHEMOTHERAPY_CHANCE = 0.02
+    DEATH_CHEMOTERAPY_CHANCE = 0.02
+    DEFAULT_MAX_ATTACKS = 3
+    DEFAULT_DEATH_CHANCE = 0.5
+    DEFAULT_SUCCESS_CHANCE = 0.5
 
     def __init__(self, position: tuple[int, int], cell_type: int, proliferation_decrease_coef: float=0.0):
         """Initialize the immune cell with coordinates on a grid."""
         super().__init__(position)
-        self.max_attacks = 3
+        self.max_attacks = self.DEFAULT_MAX_ATTACKS
         self.attacks_done = 0
         self.age = 0
         self.lifespan = random.randint(10, 30)
         self.cell_type = cell_type
+        self.death_chance_of_attack = self.DEFAULT_DEATH_CHANCE
+        self.chance_of_succesfull_attack  =  self.DEFAULT_SUCCESS_CHANCE 
 
     @classmethod
     def set_constants(cls, apoptosis_rate: float,
@@ -283,8 +288,8 @@ class ImmuneCell(Cell):
         if n_PT1 == 0:
             r_I = 0
         else:
-            K0 = 0.5
-            r_I = K0 * (n_I1 / n_PT1)
+           
+            r_I =  self.chance_of_succesfull_attack  * (n_I1 / n_PT1)
 
             if isinstance(target_cell, StemTumorCell):
                 r_I *= 0.2
@@ -329,8 +334,8 @@ class ImmuneCell(Cell):
         if n_I1 == 0:
             return 1.0
         else:
-            K1 = 0.2
-            r_t = K1 * (n_PT1 / n_I1)
+            
+            r_t =  self.death_chance_of_attack  * (n_PT1 / n_I1)
             return min(r_t, 1.0)
     
     def proliferation(self, grid):
@@ -338,13 +343,15 @@ class ImmuneCell(Cell):
         empty_neighbors =grid.empty_neighbors(self)
         if not empty_neighbors:
             return
-        position = random.choice(empty_neighbors)
-        new_cell = ImmuneCell(position, cell_type=self.cell_type)
-        grid.add_cell(new_cell)
+        if random.random() <= self.RATES['proliferation'] : 
+            position = random.choice(empty_neighbors)
+            new_cell = ImmuneCell(position, cell_type=self.cell_type)
+            grid.add_cell(new_cell)
 
 
     def make_action(self, grid):
         """Make action for the immune cell based on its type and local context."""
+        self.age +=1
         neighbors = grid.neighbors(self)
         tumor_neighbors = [cell for cell in neighbors if isinstance(cell, (RegularTumorCell, StemTumorCell))]
 
@@ -375,3 +382,20 @@ class ImmuneCell(Cell):
                         grid.remove_cell(self)
         else:
             self.migration(grid)
+        if  self.age == self.lifespan:
+            if self in grid.cells.values():
+                self.apoptosis(grid)
+
+    def apply_immunotherapy(self):
+        """Boost immune cell parameters through immunotherapy."""
+        self.max_attacks += 2
+        self.lifespan += 10
+        self.death_chance_of_attack  *= 0.8
+        self.chance_of_succesfull_attack *= 3
+
+    def reset_immunotherapy(self):
+        """Reset immune cell parameters to their default values."""
+        self.max_attacks =  self.DEFAULT_MAX_ATTACKS
+       
+        self.death_chance_of_attack = self.DEFAULT_DEATH_CHANCE
+        self.chance_of_succesfull_attack = self.DEFAULT_SUCCESS_CHANCE

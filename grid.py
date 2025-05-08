@@ -3,7 +3,8 @@ import random
 import numpy as np
 from numpy.typing import NDArray
 from immune_utils import recruit_immune_cells
-
+import random
+from cells import ImmuneCell
 
 class Grid:
     """Class representing a grid of cells."""
@@ -14,6 +15,9 @@ class Grid:
         self.cells: dict[tuple[int, int]: "Cell"] = {}
         self.kill_count = 0
         self.failure_count= 0
+        self.immune_spawn = 0.001
+
+
 
     @property
     def num_cells(self) -> int:
@@ -89,6 +93,28 @@ class Grid:
         cells = list(self.cells.values())
         for cell in cells:
             cell.apply_chemotherapy(self)
+    
+    def apply_immunotherapy(self):
+        """Apply immunotherapy to all immune cells in the grid."""
+        self.immune_spawn *=2
+        for cell in self.cells.values():
+            if isinstance(cell, ImmuneCell):
+                cell.apply_immunotherapy()
+    
+    def reset_all_immune_cells(self):
+        """Reset parameters of all immune cells in the grid."""
+        self.immune_spawn /=2
+        for cell in self.cells.values():
+            if isinstance(cell, ImmuneCell):
+                cell.reset_immunotherapy()
+    
+
+    def spawn_possible_cell(self, i, j):
+        """Spawn a possible immune cell with weighted random type at (i, j)."""
+        spell_type = random.choices([0, 1], weights=[0.7, 0.3])[0]  # 70% для 0, 30% для 1
+        new_cell = ImmuneCell((i, j), spell_type)
+        self.add_cell(new_cell)
+    
 
     def make_action(self):
         """Make action for each cell in the grid."""
@@ -96,9 +122,25 @@ class Grid:
             for j, cell in enumerate(line):
                 if cell:
                     self.cells[(i, j)].make_action(self)
-        recruit_immune_cells(self, self.kill_count, self.failure_count)
+
+
+        rows = len(self.grid)
+        cols = len(self.grid[0]) if rows > 0 else 0
+
+        for j in range(cols):
+            for i in [0, rows - 1]:
+                if not self.grid[i, j] and random.random() < self.immune_spawn:
+                    self.spawn_possible_cell(i, j)
+
+
+        for i in range(1, rows - 1):
+            for j in [0, cols - 1]:
+                if not self.grid[i, j] and random.random() < self.immune_spawn:
+                    self.spawn_possible_cell(i, j)
+        # recruit_immune_cells(self, self.kill_count, self.failure_count)
         self.kill_count = 0
         self.failure_count= 0
+
 
     def neighbors(self, cell) -> list[tuple[int, int]]:
         """Return a list of neighboring positions for a given cell."""
@@ -114,6 +156,7 @@ class Grid:
                         neighbors.append(self.cells[(new_x, new_y)])
         return neighbors
 
+    
     def count_cells(self, cell_types : tuple):
         """Count the number of cells of a specific type in the grid."""
         count = 0
