@@ -87,18 +87,17 @@ class TumorGrowthWindow(QMainWindow):
         self.running = True
 
         self.edit_mode = None
-        # 'add', 'remove', or None
+        
         
         self.grid_line_width = 0.5
-        # початкова товщина меж клітин
+
         
         self.custom_cell_templates = {}
-        # для зберігання кастомних клітин із JSON
+        
 
-        # Set cell size based on grid size initially
+        
         self.cell_size = min(600 // grid_size, 20)
 
-        # Main layout
         main_layout = QHBoxLayout()
         
         # Left panel for controls
@@ -144,7 +143,7 @@ class TumorGrowthWindow(QMainWindow):
         # Options group
         options_group = QGroupBox("Options")
         options_layout = QVBoxLayout()
-        
+
         # Grid size control
 
         grid_size_layout = QFormLayout()
@@ -315,7 +314,7 @@ class TumorGrowthWindow(QMainWindow):
 
         self.immunotherapy_active = False
         self.immunotherapy_start_step = 0
-        self.immunotherapy_duration = 50  # Значення за замовчуванням
+        self.immunotherapy_duration = 50  
         self.immunotherapy_end_step = 0
         self.immunotherapy_iteration_counter = 0
         # імунна терапія
@@ -559,7 +558,7 @@ class TumorGrowthWindow(QMainWindow):
         """Update initial settings without regenerating immediately"""
         # Settings are applied when regenerate is clicked
         pass
-    
+
     def update_line_thickness(self):
         """Оновити товщину меж клітинок."""
         self.grid_line_width = self.line_width_slider.value() / 10.0
@@ -666,22 +665,27 @@ class TumorGrowthWindow(QMainWindow):
         #         self.grid.add_cell(ImmuneCell(pos, cell_type))
 
 
-                    
+
     def update_simulation(self):
         if self.chemo_every_n_checkbox.isChecked():
             interval = self.chemo_interval_spinbox.value()
             if self.current_step % interval == 0:
                 self.grid.apply_chemotherapy()
-    
+
         if not self.running or self.current_step >= self.num_steps:
             return
+        if self.immuno_every_n_checkbox.isChecked():
+            interval = self.immuno_interval_spinbox.value()
+            if self.immunotherapy_iteration_counter % interval == 0:
+                self.start_immunotherapy()
+
         if self.immunotherapy_active:
             # self.grid.apply_immunotherapy() 
-            self.immunotherapy_iteration_counter += 1  
-            if self.immunotherapy_iteration_counter >= 20:
+            self.immunotherapy_iteration_counter += 1
+            if self.immunotherapy_iteration_counter >= self.immunotherapy_duration :
                 self.immunotherapy_active = False
-                QMessageBox.information(self, "Імунна терапія", "Імунну терапію завершено (20 ітерацій).")
-                self.grid.reset_all_immune_cells()  
+                
+                self.grid.reset_all_immune_cells()
 
         self.grid.make_action()
         self.current_step += 1
@@ -720,7 +724,7 @@ class TumorGrowthWindow(QMainWindow):
             else:
                 generic += 1
 
-            # кастомні клітини за іменем
+            
             if hasattr(cell, "name"):
                 name = cell.name
                 custom_counts[name] = custom_counts.get(name, 0) + 1
@@ -894,7 +898,9 @@ class TumorGrowthWindow(QMainWindow):
         self.immunotherapy_iteration_counter = 0  # Скидання лічильника
         self.grid.apply_immunotherapy()
         self.update_view()
-        QMessageBox.information(self, "Імунна терапія", f"Імунну терапію застосовано на {self.immunotherapy_duration} кроків.")
+        QMessageBox.information(self, "Імунна терапія", "Терапію розпочато!")
+
+
 
 class MainMenu(QMainWindow):
     def __init__(self, api_key):

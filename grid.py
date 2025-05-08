@@ -99,6 +99,7 @@ class Grid:
         for cell in self.cells.values():
             if isinstance(cell, ImmuneCell):
                 cell.apply_immunotherapy()
+    
     def reset_all_immune_cells(self):
         """Reset parameters of all immune cells in the grid."""
         self.immune_spawn /=2
@@ -130,7 +131,7 @@ class Grid:
                 if not self.grid[i, j] and random.random() < self.immune_spawn:
                     self.spawn_possible_cell(i, j)
 
-        
+
         for i in range(1, rows - 1):
             for j in [0, cols - 1]:
                 if not self.grid[i, j] and random.random() < self.immune_spawn:
@@ -138,7 +139,7 @@ class Grid:
         # recruit_immune_cells(self, self.kill_count, self.failure_count)
         self.kill_count = 0
         self.failure_count= 0
-         
+
 
     def neighbors(self, cell) -> list[tuple[int, int]]:
         """Return a list of neighboring positions for a given cell."""
