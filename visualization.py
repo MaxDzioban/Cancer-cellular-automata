@@ -15,8 +15,8 @@ from cells import Cell
 from cells import Cell, RegularTumorCell, StemTumorCell, ImmuneCell
 from grid import Grid
 import numpy as np
-import random
 from cell_editor import CellEditor
+
 
 class TumorGrowthWindow(QMainWindow):
     def __init__(self, grid_size=50, num_steps=100, update_interval=150):
@@ -263,17 +263,17 @@ class TumorGrowthWindow(QMainWindow):
 
         # cпінбокси
         self.rtc_apoptosis = QDoubleSpinBox()
-        self.rtc_apoptosis.setRange(0.01, 1)
+        self.rtc_apoptosis.setRange(0, 1)
         self.rtc_apoptosis.setSingleStep(0.01)
         # self.rtc_apoptosis.setValue(Cell.RATES['apoptosis'])
 
         self.rtc_proliferation = QDoubleSpinBox()
-        self.rtc_proliferation.setRange(0.01, 1)
+        self.rtc_proliferation.setRange(0, 1)
         self.rtc_proliferation.setSingleStep(0.01)
         # self.rtc_proliferation.setValue(Cell.RATES['proliferation'])
 
         self.rtc_migration = QDoubleSpinBox()
-        self.rtc_migration.setRange(0.01, 1)
+        self.rtc_migration.setRange(0, 1)
         self.rtc_migration.setSingleStep(0.01)
         # self.rtc_migration.setValue(Cell.RATES['migration'])
 
@@ -282,12 +282,12 @@ class TumorGrowthWindow(QMainWindow):
         self.rtc_max_divisions.setSingleStep(1)
 
         self.rtc_prolif_decrease = QDoubleSpinBox()
-        self.rtc_prolif_decrease.setRange(0.01, 1)
+        self.rtc_prolif_decrease.setRange(0, 1)
         self.rtc_prolif_decrease.setSingleStep(0.01)
         self.rtc_prolif_decrease.setValue(Cell.PROLIFERATION_DECREASE)
 
         self.rtc_chemo_chance = QDoubleSpinBox()
-        self.rtc_chemo_chance.setRange(0.01, 1)
+        self.rtc_chemo_chance.setRange(0, 1)
         self.rtc_chemo_chance.setSingleStep(0.01)
         self.rtc_chemo_chance.setValue(Cell.DEATH_CHEMOTHERAPY_CHANCE)
 
@@ -330,31 +330,31 @@ class TumorGrowthWindow(QMainWindow):
         stc_form.setRowWrapPolicy(QFormLayout.WrapLongRows)
         # cпінбокси
         self.stc_apoptosis = QDoubleSpinBox()
-        self.stc_apoptosis.setRange(0.01, 1)
+        self.stc_apoptosis.setRange(0, 1)
         self.stc_apoptosis.setSingleStep(0.01)
         # self.stc_apoptosis.setValue(Cell.RATES['apoptosis'])
 
         self.stc_proliferation = QDoubleSpinBox()
-        self.stc_proliferation.setRange(0.01, 1)
+        self.stc_proliferation.setRange(0, 1)
         self.stc_proliferation.setSingleStep(0.01)
         # self.stc_proliferation.setValue(Cell.RATES['proliferation'])
 
         self.stc_migration = QDoubleSpinBox()
-        self.stc_migration.setRange(0.01, 1)
+        self.stc_migration.setRange(0, 1)
         self.stc_migration.setSingleStep(0.01)
         # self.stc_migration.setValue(Cell.RATES['migration'])
 
         self.stc_sym_division = QDoubleSpinBox()
-        self.stc_sym_division.setRange(0.01, 1)
+        self.stc_sym_division.setRange(0, 1)
         self.stc_sym_division.setSingleStep(0.01)
 
         self.stc_prolif_decrease = QDoubleSpinBox()
-        self.stc_prolif_decrease.setRange(0.01, 1)
+        self.stc_prolif_decrease.setRange(0, 1)
         self.stc_prolif_decrease.setSingleStep(0.01)
         # self.stc_prolif_decrease.setValue(Cell.PROLIFERATION_DECREASE)
 
         self.stc_chemo_chance = QDoubleSpinBox()
-        self.stc_chemo_chance.setRange(0.01, 1)
+        self.stc_chemo_chance.setRange(0, 1)
         self.stc_chemo_chance.setSingleStep(0.01)
         # self.stc_chemo_chance.setValue(Cell.DEATH_CHEMOTHERAPY_CHANCE)
 
@@ -410,12 +410,12 @@ class TumorGrowthWindow(QMainWindow):
         # self.im_migration.setValue(ImmuneCell.RATES['migration'])
 
         self.im_prolif_decrease = QDoubleSpinBox()
-        self.im_prolif_decrease.setRange(0.01, 1)
+        self.im_prolif_decrease.setRange(0, 1)
         self.im_prolif_decrease.setSingleStep(0.01)
         # self.im_prolif_decrease.setValue(Cell.PROLIFERATION_DECREASE)
 
         self.im_chemo_chance = QDoubleSpinBox()
-        self.im_chemo_chance.setRange(0.01, 1)
+        self.im_chemo_chance.setRange(0, 1)
         self.im_chemo_chance.setSingleStep(0.01)
         # self.im_chemo_chance.setValue(Cell.DEATH_CHEMOTHERAPY_CHANCE)
 
@@ -453,7 +453,7 @@ class TumorGrowthWindow(QMainWindow):
         self.chemo_every_n_checkbox = QCheckBox("Автоматично кожні N кроків")
         chemo_layout.addWidget(self.chemo_every_n_checkbox)
         self.chemo_interval_spinbox = QSpinBox()
-        self.chemo_interval_spinbox.setRange(1, 10000)
+        self.chemo_interval_spinbox.setRange(1, 1000)
         self.chemo_interval_spinbox.setValue(50)
         chemo_layout.addWidget(QLabel("Інтервал N:"))
         chemo_layout.addWidget(self.chemo_interval_spinbox)
@@ -478,7 +478,7 @@ class TumorGrowthWindow(QMainWindow):
 
         self.immuno_duration_spinbox = QSpinBox()
         self.immuno_duration_spinbox.setRange(10, 1000)
-        self.immuno_duration_spinbox.setValue(50)
+        self.immuno_duration_spinbox.setValue(10)
         immuno_layout.addWidget(QLabel("Тривалість:"))
         immuno_layout.addWidget(self.immuno_duration_spinbox)
         self.immuno_every_n_checkbox = QCheckBox("Автоматично кожні N кроків")
@@ -493,35 +493,6 @@ class TumorGrowthWindow(QMainWindow):
         immuno_group.setLayout(immuno_layout)
         global_params_layout.addWidget(immuno_group, 2, 0, 1, 2)
 
-
-        # # Immune Cell Parameters
-        # self.immune_apoptosis = QDoubleSpinBox()
-        # self.immune_apoptosis.setRange(0, 1)
-        # self.immune_apoptosis.setSingleStep(0.01)
-        # self.immune_apoptosis.setValue(ImmuneCell.RATES['apoptosis'])
-
-        # self.immune_proliferation = QDoubleSpinBox()
-        # self.immune_proliferation.setRange(0, 1)
-        # self.immune_proliferation.setSingleStep(0.01)
-        # self.immune_proliferation.setValue(ImmuneCell.RATES['proliferation'])
-
-        # self.immune_migration = QDoubleSpinBox()
-        # self.immune_migration.setRange(0, 1)
-        # self.immune_migration.setSingleStep(0.01)
-        # self.immune_migration.setValue(ImmuneCell.RATES['migration'])
-        # self.immune_apoptosis.valueChanged.connect(self.apply_global_cell_parameters)
-        # self.immune_proliferation.valueChanged.connect(self.apply_global_cell_parameters)
-        # self.immune_migration.valueChanged.connect(self.apply_global_cell_parameters)
-
-        # im_global_group = QGroupBox("Immune Cell Parameters")
-        # im_global_form = QFormLayout()
-        # im_global_form.addRow("Apoptosis:", self.immune_apoptosis)
-        # im_global_form.addRow("Proliferation:", self.immune_proliferation)
-        # im_global_form.addRow("Migration:", self.immune_migration)
-        # im_global_group.setLayout(im_global_form)
-        # global_params_layout.addWidget(im_global_group)
-
-
         global_params_widget = QWidget()
         global_params_widget.setLayout(global_params_layout)
         global_params_widget.setFixedWidth(700)
@@ -534,8 +505,8 @@ class TumorGrowthWindow(QMainWindow):
         container.setLayout(main_layout)
         self.setCentralWidget(container)
 
-        self.init_grid(self.grid_size)
         self.initialize_default_parameters()
+        self.init_grid(self.grid_size)
         self.create_visualization()
         self.grid_size_spinbox.valueChanged.connect(self.update_grid_size)
         self.speed_slider.valueChanged.connect(self.update_speed)
@@ -551,7 +522,7 @@ class TumorGrowthWindow(QMainWindow):
 
         self.grid_size = size
         self.cell_size = min(600 // size, 20)
-        
+
         self.grid = Grid(size, size)
         center = size // 2
         self.initialize_tumor(center, center)
@@ -686,9 +657,9 @@ class TumorGrowthWindow(QMainWindow):
         # очистити стару
 
         new_size = self.grid_size_spinbox.value()
+        self.apply_cell_parameters()
         self.init_grid(new_size)
 
-        self.apply_cell_parameters()
 
         self.create_visualization()
         self.current_step = 0
@@ -816,7 +787,7 @@ class TumorGrowthWindow(QMainWindow):
         """Apply chemotherapy manually."""
         self.grid.apply_chemotherapy()
         self.update_view()
-        QMessageBox.information(self, "Хіміотерапія", "Хіміотерапію застосовано.")
+        # QMessageBox.information(self, "Хіміотерапія", "Хіміотерапію застосовано.")
 
 
     def update_cell_counts(self):
@@ -956,19 +927,25 @@ class TumorGrowthWindow(QMainWindow):
     def initialize_default_parameters(self):
         """Set default parameters for all cell types"""
         # Default values
-        rtc_apop = 0.1
-        rtc_prolif = 0.2
+        rtc_apop = 0.05
+        rtc_prolif = 0.25
         rtc_mig = 0.05
-        stc_apop = 0.05
-        stc_prolif = 0.2
+        rtc_max_divisions = 5
+        rtc_prolif_decrease = 0.3
+        rtc_chemo_death_chance = 0.15
+
+        stc_apop = 0.0
+        stc_prolif = 0.25
         stc_mig = 0.05
-        immune_apop = 0.05
-        immune_prolif = 0.1
+        stc_sym_division_rate = 0.1
+        stc_prolif_decrease = 0.2
+        stc_chemo_death_chance = 0.12
+
+        immune_apop = 0.08
+        immune_prolif = 0.15
         immune_mig = 0.3
-        max_divisions = 5
-        sym_division_rate = 0.08
-        prolif_decrease = 0.05
-        chemo_chance = 0.02
+        immune_prolif_decrease = 0.16
+        immune_chemo_death_chance = 0.1
 
         # Block signals for individual controls
         spinboxes = [
@@ -988,24 +965,24 @@ class TumorGrowthWindow(QMainWindow):
         self.rtc_apoptosis.setValue(rtc_apop)
         self.rtc_proliferation.setValue(rtc_prolif)
         self.rtc_migration.setValue(rtc_mig)
-        self.rtc_max_divisions.setValue(max_divisions)
-        self.rtc_prolif_decrease.setValue(prolif_decrease)
-        self.rtc_chemo_chance.setValue(chemo_chance)
+        self.rtc_max_divisions.setValue(rtc_max_divisions)
+        self.rtc_prolif_decrease.setValue(rtc_prolif_decrease)
+        self.rtc_chemo_chance.setValue(rtc_chemo_death_chance)
 
         # Stem Tumor Cell UI elements
         self.stc_apoptosis.setValue(stc_apop)
         self.stc_proliferation.setValue(stc_prolif)
         self.stc_migration.setValue(stc_mig)
-        self.stc_sym_division.setValue(sym_division_rate)
-        self.stc_prolif_decrease.setValue(prolif_decrease)
-        self.stc_chemo_chance.setValue(chemo_chance)
+        self.stc_sym_division.setValue(stc_sym_division_rate)
+        self.stc_prolif_decrease.setValue(stc_prolif_decrease)
+        self.stc_chemo_chance.setValue(stc_chemo_death_chance)
 
         # Immune Cell UI elements
         self.im_apoptosis.setValue(immune_apop)
         self.im_proliferation.setValue(immune_prolif)
         self.im_migration.setValue(immune_mig)
-        self.im_prolif_decrease.setValue(prolif_decrease)
-        self.im_chemo_chance.setValue(chemo_chance)
+        self.im_prolif_decrease.setValue(immune_prolif_decrease)
+        self.im_chemo_chance.setValue(immune_chemo_death_chance)
 
         for spinbox in spinboxes:
             spinbox.blockSignals(False)
@@ -1016,28 +993,27 @@ class TumorGrowthWindow(QMainWindow):
             apoptosis_rate=rtc_apop,
             proliferation_rate=rtc_prolif,
             migration_rate=rtc_mig,
-            max_divisions=max_divisions,
-            proliferation_decrease_coef=prolif_decrease,
-            death_chemotherapy_chance=chemo_chance
+            max_divisions=rtc_max_divisions,
+            proliferation_decrease_coef=rtc_prolif_decrease,
+            death_chemotherapy_chance=rtc_chemo_death_chance
         )
 
         StemTumorCell.set_constants(
             apoptosis_rate=stc_apop,
             proliferation_rate=stc_prolif,
             migration_rate=stc_mig,
-            symmetrical_division_rate=sym_division_rate,
-            proliferation_decrease_coef=prolif_decrease,
-            death_chemotherapy_chance=chemo_chance
+            symmetrical_division_rate=stc_sym_division_rate,
+            proliferation_decrease_coef=stc_prolif_decrease,
+            death_chemotherapy_chance=stc_chemo_death_chance
         )
 
         ImmuneCell.set_constants(
             apoptosis_rate=immune_apop,
             proliferation_rate=immune_prolif,
             migration_rate=immune_mig,
-            proliferation_decrease_coef=prolif_decrease,
-            death_chemotherapy_chance=chemo_chance
+            proliferation_decrease_coef=immune_prolif_decrease,
+            death_chemotherapy_chance=immune_chemo_death_chance
         )
-
 
     def apply_cell_parameters(self):
         """Apply parameters to the all cell type"""
@@ -1161,7 +1137,7 @@ class TumorGrowthWindow(QMainWindow):
         self.immunotherapy_iteration_counter = 0  # Скидання лічильника
         self.grid.apply_immunotherapy()
         self.update_view()
-        QMessageBox.information(self, "Імунна терапія", "Терапію розпочато!")
+        # QMessageBox.information(self, "Імунна терапія", "Терапію розпочато!")
 
 
 class MainMenu(QMainWindow):

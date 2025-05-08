@@ -15,8 +15,8 @@ class Grid:
         self.cells: dict[tuple[int, int]: "Cell"] = {}
         self.kill_count = 0
         self.failure_count= 0
-        self.immune_spawn = 0.001
-
+        self.immune_spawn = 0.003
+        self.immune_spawn_decrease = 0.03
 
 
     @property
@@ -90,34 +90,34 @@ class Grid:
 
     def apply_chemotherapy(self):
         """Apply chemotherapy to all cells in the grid."""
+        self.immune_spawn *= (1-self.immune_spawn_decrease)
         cells = list(self.cells.values())
         for cell in cells:
             cell.apply_chemotherapy(self)
-    
+
     def apply_immunotherapy(self):
         """Apply immunotherapy to all immune cells in the grid."""
-        self.immune_spawn *=2
+        self.immune_spawn *=3
         for cell in self.cells.values():
             if isinstance(cell, ImmuneCell):
                 cell.apply_immunotherapy()
-    
+
     def reset_all_immune_cells(self):
         """Reset parameters of all immune cells in the grid."""
-        self.immune_spawn /=2
+        self.immune_spawn /=3
         for cell in self.cells.values():
             if isinstance(cell, ImmuneCell):
                 cell.reset_immunotherapy()
-    
 
     def spawn_possible_cell(self, i, j):
         """Spawn a possible immune cell with weighted random type at (i, j)."""
         spell_type = random.choices([0, 1], weights=[0.7, 0.3])[0]  # 70% для 0, 30% для 1
         new_cell = ImmuneCell((i, j), spell_type)
         self.add_cell(new_cell)
-    
 
     def make_action(self):
         """Make action for each cell in the grid."""
+        # print(self.immune_spawn)
         for i, line in enumerate(self.grid):
             for j, cell in enumerate(line):
                 if cell:

@@ -73,13 +73,10 @@ class Cell:
     def migration(self, grid):
         """Cell migrates to an empty neighboring cell."""
         # print(f"Cell at {self.position} migrates.")
-        # empty_neighbors = grid.empty_neighbors(self)
-        # if empty_neighbors:
-        #     new_position = random.choice(empty_neighbors)
-        #     grid.move_cell(self, new_position)
-        # else:
-        #     print("No empty neighbors to migrate to.")
-        pass
+        empty_neighbors = grid.empty_neighbors(self)
+        if empty_neighbors:
+            new_position = random.choice(empty_neighbors)
+            grid.move_cell(self, new_position)
 
     def quiscence(self):
         """Cell remains quiescent."""
@@ -87,12 +84,12 @@ class Cell:
 
     def apply_chemotherapy(self, grid):
         """Apply chemotherapy to the cell."""
-        self.proliferation_decrease_coef += self.PROLIFERATION_DECREASE*(1-self.chemotherapy_resistance)
+        self.proliferation_decrease_coef *= (1-self.PROLIFERATION_DECREASE)*(1-self.chemotherapy_resistance)
         # print(self.proliferation_decrease_coef)
         # if self.proliferation_decrease_coef >= 1:
             # self.apoptosis(grid)
             # return
-        if random.random() <= self.DEATH_CHEMOTHERAPY_CHANCE:
+        if random.random() <= self.DEATH_CHEMOTHERAPY_CHANCE*(1-self.chemotherapy_resistance):
             self.apoptosis(grid)
 
 
@@ -104,12 +101,11 @@ class RegularTumorCell(Cell):
     DEATH_CHEMOTHERAPY_CHANCE = 0.02
     CHEMOTHERAPY_RESISTANCE_INCREASE = 0.01
 
-    def __init__(self, position: tuple[int, int], proliferation_decrease_coef: float=0.0, p_remaining: int=MAX_DIVISIONS):
+    def __init__(self, position: tuple[int, int], proliferation_decrease_coef: float=0.0, p_remaining: int=None):
         """Initialize the regular tumor cell."""
         super().__init__(position, proliferation_decrease_coef)
-        self.p_remaining = p_remaining
         # Number of divisions remaining
-
+        self.p_remaining = self.MAX_DIVISIONS if p_remaining is None else p_remaining
         self.is_tumor_cell = True
 
     @classmethod
@@ -151,6 +147,7 @@ class RegularTumorCell(Cell):
     def proliferation(self, grid):
         """RTC divides to empty neighboring position if p_remaining > 0."""
         if self.p_remaining == 0:
+            self.apoptosis(grid)
             return
 
         empty_neighbors = grid.empty_neighbors(self)
