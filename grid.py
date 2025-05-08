@@ -1,8 +1,9 @@
 """grid.py"""
+import random
 import numpy as np
 from numpy.typing import NDArray
 from immune_utils import recruit_immune_cells
-import random
+
 
 class Grid:
     """Class representing a grid of cells."""

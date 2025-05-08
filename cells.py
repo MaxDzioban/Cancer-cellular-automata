@@ -5,13 +5,27 @@ class Cell:
     """Class representing a cell in a grid."""
     RATES = { 'apoptosis': 0.0, 'proliferation': 0.0, 'migration': 0.0 }
     PROLIFERATION_DECREASE = 0.05
-    DEATH_CHEMOTERAPY_CHANCE = 0.02
+    DEATH_CHEMOTHERAPY_CHANCE = 0.02
+    CHEMOTHERAPY_RESISTANCE_INCREASE = 0.01
 
-    def __init__(self, position: tuple[int, int], proliferation_decrease_coef: float=0.0):
+    def __init__(self, position: tuple[int, int], proliferation_decrease_coef: float=0.0, chemotherapy_resistance: float=None):
         """Initialize the cell with coordinates on a grid"""
         self.position = position  # Tuple of (x, y) coordinates on a grid
         self.is_tumor_cell = False
         self.proliferation_decrease_coef = proliferation_decrease_coef
+        self.chemotherapy_resistance = self.__beta_skewed() if chemotherapy_resistance is None else chemotherapy_resistance
+
+    @staticmethod
+    def __beta_skewed(alpha: float = 0.5) -> float:
+        """
+        Draw a sample from Beta(alpha, 1), skewed toward 0 when alpha < 1.
+        
+        Args:
+            alpha: shape parameter (alpha < 1 biases samples toward 0).
+        Returns:
+            A float in (0,1).
+        """
+        return random.betavariate(alpha, 1.0)
 
     @classmethod
     def set_rates(cls, apoptosis_rate: float, proliferation_rate: float, migration_rate: float):
@@ -53,7 +67,7 @@ class Cell:
         empty_neighbors = grid.empty_neighbors(self)
         if empty_neighbors:
             new_position = random.choice(empty_neighbors)
-            new_cell = Cell(new_position, self.proliferation_decrease_coef)
+            new_cell = Cell(new_position, self.proliferation_decrease_coef, self.chemotherapy_resistance)
             grid.add_cell(new_cell)
 
     def migration(self, grid):
@@ -73,12 +87,12 @@ class Cell:
 
     def apply_chemotherapy(self, grid):
         """Apply chemotherapy to the cell."""
-        self.proliferation_decrease_coef += self.PROLIFERATION_DECREASE
+        self.proliferation_decrease_coef += self.PROLIFERATION_DECREASE*(1-self.chemotherapy_resistance)
         # print(self.proliferation_decrease_coef)
         # if self.proliferation_decrease_coef >= 1:
             # self.apoptosis(grid)
             # return
-        if random.random() <= self.DEATH_CHEMOTERAPY_CHANCE:
+        if random.random() <= self.DEATH_CHEMOTHERAPY_CHANCE:
             self.apoptosis(grid)
 
 
@@ -86,8 +100,9 @@ class RegularTumorCell(Cell):
     """Class representing a regular tumor cell."""
     RATES = { 'apoptosis': 0.0, 'proliferation': 0.0, 'migration': 0.0 }
     MAX_DIVISIONS = 5
-    PROLIFERATION_DECREASE = 0.05
-    DEATH_CHEMOTERAPY_CHANCE = 0.02
+    PROLIFERATION_DECREASE = 0.08
+    DEATH_CHEMOTHERAPY_CHANCE = 0.02
+    CHEMOTHERAPY_RESISTANCE_INCREASE = 0.01
 
     def __init__(self, position: tuple[int, int], proliferation_decrease_coef: float=0.0, p_remaining: int=MAX_DIVISIONS):
         """Initialize the regular tumor cell."""
@@ -131,7 +146,7 @@ class RegularTumorCell(Cell):
 
         cls.MAX_DIVISIONS = max_divisions
         cls.PROLIFERATION_DECREASE = proliferation_decrease_coef
-        cls.DEATH_CHEMOTERAPY_CHANCE = death_chemotherapy_chance
+        cls.DEATH_CHEMOTHERAPY_CHANCE = death_chemotherapy_chance
 
     def proliferation(self, grid):
         """RTC divides to empty neighboring position if p_remaining > 0."""
@@ -149,8 +164,9 @@ class RegularTumorCell(Cell):
 class StemTumorCell(Cell):
     """Class representing a stem tumor cell."""
     RATES = { 'apoptosis': 0.0, 'proliferation': 0.0, 'migration': 0.0 }
-    PROLIFERATION_DECREASE = 0.05
-    DEATH_CHEMOTERAPY_CHANCE = 0.02
+    PROLIFERATION_DECREASE = 0.03
+    DEATH_CHEMOTHERAPY_CHANCE = 0.01
+    CHEMOTHERAPY_RESISTANCE_INCREASE = 0.015
 
     def __init__(self, position: tuple[int, int], proliferation_decrease_coef: float=0.0):
         """Initialize the stem tumor cell."""
@@ -194,7 +210,7 @@ class StemTumorCell(Cell):
 
         cls.RATES['symmetrical_division'] = symmetrical_division_rate
         cls.PROLIFERATION_DECREASE = proliferation_decrease_coef
-        cls.DEATH_CHEMOTERAPY_CHANCE = death_chemotherapy_chance
+        cls.DEATH_CHEMOTHERAPY_CHANCE = death_chemotherapy_chance
 
     def proliferation(self, grid):
         """CSC can divide symmetrically or asymmetrically."""
@@ -212,7 +228,7 @@ class ImmuneCell(Cell):
     """Class representing an immune cell."""
     RATES = { 'apoptosis': 0.0, 'proliferation': 0.0, 'migration': 0.0 }
     PROLIFERATION_DECREASE = 0.05
-    DEATH_CHEMOTERAPY_CHANCE = 0.02
+    DEATH_CHEMOTHERAPY_CHANCE = 0.02
 
     def __init__(self, position: tuple[int, int], cell_type: int, proliferation_decrease_coef: float=0.0):
         """Initialize the immune cell with coordinates on a grid."""
@@ -254,7 +270,7 @@ class ImmuneCell(Cell):
         cls.set_rates(apoptosis_rate, proliferation_rate, migration_rate)
 
         cls.PROLIFERATION_DECREASE = proliferation_decrease_coef
-        cls.DEATH_CHEMOTERAPY_CHANCE = death_chemotherapy_chance
+        cls.DEATH_CHEMOTHERAPY_CHANCE = death_chemotherapy_chance
 
     def attack(self, target_cell, grid):
         """Immune cell attacks a tumor cell."""
