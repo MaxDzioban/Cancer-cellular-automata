@@ -238,13 +238,13 @@ class TumorGrowthWindow(QMainWindow):
         # Add panels to main layout
         left_panel_widget = QWidget()
         left_panel_widget.setLayout(left_panel)
-        left_panel_widget.setFixedWidth(250)  # Set fixed width for the left panel
+        left_panel_widget.setFixedWidth(320)  # Set fixed width for the left panel
         
         right_panel_widget = QWidget()
         right_panel_widget.setLayout(right_panel)
         
         main_layout.addWidget(left_panel_widget)
-        main_layout.addWidget(right_panel_widget, 1)  # Give the visualization more space
+        main_layout.addWidget(right_panel_widget, 3)  # Give the visualization more space
 
 
 
@@ -495,10 +495,10 @@ class TumorGrowthWindow(QMainWindow):
 
         global_params_widget = QWidget()
         global_params_widget.setLayout(global_params_layout)
-        global_params_widget.setFixedWidth(700)
+        global_params_widget.setFixedWidth(720)
 
-        main_layout.addWidget(left_panel_widget)
-        main_layout.addWidget(right_panel_widget, 1)
+        # main_layout.addWidget(left_panel_widget)
+        # main_layout.addWidget(right_panel_widget, 3)
         main_layout.addWidget(global_params_widget)
 
         container = QWidget()
@@ -515,7 +515,7 @@ class TumorGrowthWindow(QMainWindow):
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_simulation)
         self.timer.start(self.update_interval)
-        self.resize(900, 600)
+        self.resize(1300, 700)
 
     def init_grid(self, size):
         """Initialize the grid and cell visualization"""
