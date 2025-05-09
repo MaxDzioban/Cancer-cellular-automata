@@ -76,7 +76,7 @@
 \end{itemize}
 \begin{figure}[h] % 'h' means 'here', to place the image near this point
     \centering
-    \includegraphics[width=0.5\textwidth]{RTC_diagram.png} % Replace with your file name
+    \includegraphics[width=0.7\textwidth]{RTC_diagram.png} % Replace with your file name
     \caption{Автомат RTC, k - кількість поділів, що залишились}
     \label{fig:example}
 \end{figure}
@@ -119,7 +119,7 @@
 \end{itemize}
 \begin{figure}[h] % 'h' means 'here', to place the image near this point
     \centering
-    \includegraphics[width=0.5\textwidth]{STC_diagram.png} % Replace with your file name
+    \includegraphics[width=0.7\textwidth]{STC_diagram.png} % Replace with your file name
     \caption{Автомат STC}
     \label{fig:example}
 \end{figure}
@@ -193,7 +193,7 @@
 
 \begin{figure}[h] % 'h' means 'here', to place the image near this point
     \centering
-    \includegraphics[width=0.5\textwidth]{IM_diagram.jpg}
+    \includegraphics[width=0.7\textwidth]{IM_diagram.jpg}
     \caption{Автомат ImmuneCell, k - вік, l - к-сть атак}
     \label{fig:example}
 \end{figure}
@@ -292,6 +292,13 @@ $DEATH\_CHEMOTHERAPY\_CHANCE \times (1-chemotherapy\_resistance)$
     \]
 \end{itemize}
 
+\begin{figure}[h] % 'h' means 'here', to place the image near this point
+    \centering
+    \includegraphics[width=0.9\textwidth]{gui.png} % Replace with your file name
+    \caption{Графічний інтерфейс користувача}
+    \label{fig:example}
+\end{figure}
+
 
 \section{Завантаження та запуск}
 
@@ -311,10 +318,21 @@ cd cancer-cellular-automata
 pip install -r requirements.txt
     \end{lstlisting}
     
-    \item Запустіть основну симуляцію:
+    \item Запустіть основну програму:
     \begin{lstlisting}[language=bash]
 python main.py
     \end{lstlisting}
 \end{enumerate}
+
+\begin{thebibliography}{99}
+
+\bibitem{tumor-growth-dynamics}
+Author(s), ``Cellular-automaton model for tumor growth dynamics: Virtualization of different scenarios,''
+\url{https://www.sciencedirect.com/science/article/pii/S0010482522011891}
+
+\bibitem{chemotherapy-effects}
+Author(s), ``A cellular automata model of chemotherapy effects on tumour growth: targeting cancer and immune cells,''
+\url{https://www.tandfonline.com/doi/full/10.1080/13873954.2019.1571515}
+\end{thebibliography}
 
 \end{document}

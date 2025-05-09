@@ -19,7 +19,7 @@
    pip install -r requirements.txt
 ```
 
-3. Запустіть основну симуляцію:
+3. Запустіть основну програму:
 ```bash
    python main.py
 ```
